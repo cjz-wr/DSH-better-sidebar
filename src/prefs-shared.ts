@@ -16,6 +16,12 @@ export interface SidebarPrefs {
   /** Default panel width as a percent of the window width (20–60). */
   defaultWidthPercent: number
   /**
+   * Panel opacity as a percent (20–100): the right panel and the bottom
+   * panel fade to this value via `--dsh-sidebar-panel-opacity`. 100 is
+   * fully opaque (the default); lower values make the panels translucent.
+   */
+  panelOpacity: number
+  /**
    * Whether the sidebar auto-activates (opens the panel) and expands the
    * Subagent page when the current conversation spawns a new subagent.
    */
@@ -60,6 +66,15 @@ export interface SidebarPrefs {
    * own enable switch gates it too (both must be on for the takeover).
    */
   interceptOpenPath: boolean
+  /**
+   * Whether the editor tab runs in merged mode: a path input replaces the
+   * plain header and a toggleable file-tree panel (with a global name
+   * search) docks at the tab's right edge. On by default; also makes brand
+   * new sessions seed an empty editor tab (tree panel open) instead of the
+   * explorer tab. The switch lives under the editor card's gear in the
+   * Side card settings; off restores the pre-merge editor exactly.
+   */
+  editorExplorer: boolean
   /**
    * Position compatibility mode: reserves space at the top for the native
    * Windows title bar (drawn at the window's top-right corner over the web
@@ -156,7 +171,12 @@ export interface SidebarPrefs {
 /** Range contract of {@link SidebarPrefs.defaultWidthPercent}. */
 export const WIDTH_PERCENT_MIN = 20
 export const WIDTH_PERCENT_MAX = 60
-export const WIDTH_PERCENT_DEFAULT = 30
+export const WIDTH_PERCENT_DEFAULT = 35
+
+/** Range contract of {@link SidebarPrefs.panelOpacity}. */
+export const PANEL_OPACITY_MIN = 20
+export const PANEL_OPACITY_MAX = 100
+export const PANEL_OPACITY_DEFAULT = 100
 
 /** Range contract of {@link SidebarPrefs.terminalFontSize}. */
 export const TERMINAL_FONT_SIZE_MIN = 9
@@ -170,8 +190,9 @@ export const TITLE_BAR_STRIP_DEFAULT = 40
 
 /** Fallback prefs used whenever the settings document is unreachable or malformed. */
 export const SIDEBAR_PREFS_DEFAULTS: SidebarPrefs = {
-  openByDefault: true,
+  openByDefault: false,
   defaultWidthPercent: WIDTH_PERCENT_DEFAULT,
+  panelOpacity: PANEL_OPACITY_DEFAULT,
   autoOpenSubagent: true,
   autoOpenJobs: true,
   agentTerminalTools: false,
@@ -179,6 +200,7 @@ export const SIDEBAR_PREFS_DEFAULTS: SidebarPrefs = {
   terminalFontFamily: '',
   terminalFontSize: TERMINAL_FONT_SIZE_DEFAULT,
   interceptOpenPath: true,
+  editorExplorer: true,
   titleBarCompat: false,
   titleBarStripPx: TITLE_BAR_STRIP_DEFAULT,
   htmlViewerNoSandbox: false,
@@ -195,6 +217,11 @@ export const SIDEBAR_PREFS_DEFAULTS: SidebarPrefs = {
 /** Clamp one width percent into the contract range (shared by schema and client reads). */
 export function clampWidthPercent(value: number): number {
   return Math.min(WIDTH_PERCENT_MAX, Math.max(WIDTH_PERCENT_MIN, Math.round(value)))
+}
+
+/** Clamp one panel opacity percent into the contract range (shared by schema and client reads). */
+export function clampPanelOpacity(value: number): number {
+  return Math.min(PANEL_OPACITY_MAX, Math.max(PANEL_OPACITY_MIN, Math.round(value)))
 }
 
 /** Clamp one terminal font size into the contract range (shared by schema and client reads). */

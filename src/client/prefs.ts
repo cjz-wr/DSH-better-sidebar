@@ -10,6 +10,7 @@
  */
 import type { api } from './api.ts'
 import {
+  clampPanelOpacity,
   clampTerminalFontSize,
   clampTitleBarStrip,
   clampWidthPercent,
@@ -17,7 +18,7 @@ import {
   type SidebarPrefs,
 } from '../prefs-shared.ts'
 
-export { SIDEBAR_PREFS_DEFAULTS, clampTerminalFontSize, clampTitleBarStrip, clampWidthPercent }
+export { SIDEBAR_PREFS_DEFAULTS, clampPanelOpacity, clampTerminalFontSize, clampTitleBarStrip, clampWidthPercent }
 export type { SidebarPrefs }
 
 /** The settings wire face the preferences need (a subset of the plugin api). */
@@ -39,6 +40,9 @@ export function parsePrefs(value: unknown): SidebarPrefs {
     defaultWidthPercent: typeof record.defaultWidthPercent === 'number' && Number.isFinite(record.defaultWidthPercent)
       ? clampWidthPercent(record.defaultWidthPercent)
       : SIDEBAR_PREFS_DEFAULTS.defaultWidthPercent,
+    panelOpacity: typeof record.panelOpacity === 'number' && Number.isFinite(record.panelOpacity)
+      ? clampPanelOpacity(record.panelOpacity)
+      : SIDEBAR_PREFS_DEFAULTS.panelOpacity,
     autoOpenSubagent: typeof record.autoOpenSubagent === 'boolean'
       ? record.autoOpenSubagent
       : SIDEBAR_PREFS_DEFAULTS.autoOpenSubagent,
@@ -60,6 +64,9 @@ export function parsePrefs(value: unknown): SidebarPrefs {
     interceptOpenPath: typeof record.interceptOpenPath === 'boolean'
       ? record.interceptOpenPath
       : SIDEBAR_PREFS_DEFAULTS.interceptOpenPath,
+    editorExplorer: typeof record.editorExplorer === 'boolean'
+      ? record.editorExplorer
+      : SIDEBAR_PREFS_DEFAULTS.editorExplorer,
     titleBarCompat: typeof record.titleBarCompat === 'boolean'
       ? record.titleBarCompat
       : SIDEBAR_PREFS_DEFAULTS.titleBarCompat,
@@ -134,5 +141,24 @@ export async function loadPrefs(settings: SidebarSettingsClient): Promise<Sideba
   } catch {
     // Transport/fence rejection or a malformed response: keep the defaults.
     return { ...SIDEBAR_PREFS_DEFAULTS }
+  }
+}
+
+/**
+ * Read the external-disable flag from the same settings route: the
+ * dsh-web-ui family's aionui-panel provider choice. True only when the host
+ * resolved `aionui-panel.rightPanel` to 'aionui-panel' — while true the
+ * sidebar must not mount (the two right panels are mutually exclusive). Any
+ * failure (route rejected, aionui absent, malformed response) reads false,
+ * so a missing family never hides the sidebar.
+ * @param settings - the settings wire face (the plugin api by default).
+ * @returns the external-disable flag (false on any failure).
+ */
+export async function loadExternalDisable(settings: SidebarSettingsClient): Promise<boolean> {
+  try {
+    const view = await settings.settingsGet()
+    return view.externalDisable === true
+  } catch {
+    return false
   }
 }
